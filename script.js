@@ -1,6 +1,31 @@
+// === НАСТРОЙКИ ===
+const GEMINI_API_KEY = 'AQ.Ab8RN6JkXIqMYtl4sjW4GxtA6dtJpy7lr6WCv5gHA-_O7ZFfMQ';
+const API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
+
 const STORAGE_KEY = 'sio_chats';
 let currentChatId = null;
 let chats = [];
+
+async function getAIResponse(userMessage) {
+    try {
+        const response = await fetch(`${API_URL}?key=${GEMINI_API_KEY}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                contents: [{ parts: [{ text: userMessage }] }]
+            })
+        });
+        const data = await response.json();
+        if (data.candidates && data.candidates[0] && data.candidates[0].content) {
+            return data.candidates[0].content.parts[0].text;
+        } else {
+            return '😕 Не удалось получить ответ. Попробуйте переформулировать вопрос.';
+        }
+    } catch (error) {
+        console.error('Ошибка Gemini API:', error);
+        return '❌ Ошибка соединения с сервером. Проверьте интернет.';
+    }
+}
 
 function loadChats() {
     const saved = localStorage.getItem(STORAGE_KEY);
@@ -27,7 +52,7 @@ function createNewChat() {
         id: Date.now(),
         title: 'Новый чат',
         messages: [
-            { role: 'ai', text: 'Привет! Я Sio — нейросеть-помощник. Задай мне любой вопрос, и я постараюсь ответить. Чем могу помочь?', time: new Date().toLocaleTimeString() }
+            { role: 'ai', text: 'Привет! Я Sio — нейросеть на основе Google Gemini. Задай мне любой вопрос: напиши стих, объясни физику, придумай рецепт или просто поболтай. Чем могу помочь?', time: new Date().toLocaleTimeString() }
         ],
         createdAt: new Date().toISOString()
     };
@@ -138,7 +163,7 @@ function updateChatTitle(chatId) {
     }
 }
 
-function addMessage(chatId, role, text) {
+async function addMessage(chatId, role, text) {
     const chat = chats.find(c => c.id == chatId);
     if (chat) {
         chat.messages.push({
@@ -172,64 +197,23 @@ function hideTypingIndicator() {
     if (indicator) indicator.remove();
 }
 
-async function getAIResponse(userMessage) {
-    showTypingIndicator();
-    try {
-        const response = await fetch('https://api.aimlapi.com/v1/chat/completions', {
-            method: 'POST',
-            headers: {
-                'Authorization': 'Bearer YOUR_API_KEY_HERE',
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                model: 'gpt-3.5-turbo',
-                messages: [{ role: 'user', content: userMessage }],
-                max_tokens: 500
-            })
-        });
-        const data = await response.json();
-        if (data.choices && data.choices[0]) {
-            return data.choices[0].message.content;
-        } else {
-            return 'Извините, произошла ошибка. Попробуйте ещё раз.';
-        }
-    } catch (error) {
-        return 'Ошибка соединения с сервером. Проверьте API-ключ.';
-    }
-}
-
-function getMockResponse(message) {
-    const lowerMsg = message.toLowerCase();
-    if (lowerMsg.includes('привет')) return 'Привет! Рада тебя видеть. Чем могу помочь?';
-    if (lowerMsg.includes('как дела')) return 'У меня всё отлично! А у тебя?';
-    if (lowerMsg.includes('спасибо')) return 'Пожалуйста! Обращайся ещё.';
-    if (lowerMsg.includes('что ты умеешь')) return 'Я умею отвечать на вопросы, помогать с идеями, писать тексты и просто болтать. Спрашивай что угодно!';
-    return `Вот что я думаю по поводу: "${message}". Это интересный вопрос! Попробуй задать что-то ещё.`;
-}
-
 async function sendMessage() {
     const input = document.getElementById('userInput');
     const message = input.value.trim();
     if (!message) return;
     input.value = '';
     addMessage(currentChatId, 'user', message);
-    let reply;
-    if (document.getElementById('sendBtn').dataset.mode === 'mock') {
-        reply = getMockResponse(message);
-        addMessage(currentChatId, 'ai', reply);
-        hideTypingIndicator();
-    } else {
-        reply = await getAIResponse(message);
-        hideTypingIndicator();
-        addMessage(currentChatId, 'ai', reply);
-    }
+    showTypingIndicator();
+    const reply = await getAIResponse(message);
+    hideTypingIndicator();
+    addMessage(currentChatId, 'ai', reply);
 }
 
 function clearCurrentChat() {
     const chat = chats.find(c => c.id == currentChatId);
     if (chat) {
         chat.messages = [
-            { role: 'ai', text: 'Привет! Я Sio — нейросеть-помощник. Задай мне любой вопрос, и я постараюсь ответить. Чем могу помочь?', time: new Date().toLocaleTimeString() }
+            { role: 'ai', text: 'Привет! Я Sio — нейросеть на основе Google Gemini. Задай мне любой вопрос, и я постараюсь ответить. Чем могу помочь?', time: new Date().toLocaleTimeString() }
         ];
         saveChats();
         loadChat(currentChatId);
@@ -282,28 +266,19 @@ function initEventListeners() {
 function initTheme() {
     const saved = localStorage.getItem('sioTheme');
     if (saved === 'dark') document.body.classList.add('dark-theme');
-    document.getElementById('themeToggle')?.addEventListener('click', () => { document.body.classList.toggle('dark-theme'); localStorage.setItem('sioTheme', document.body.classList.contains('dark-theme') ? 'dark' : 'light'); });
-    document.getElementById('themeToggleMobile')?.addEventListener('click', () => { document.body.classList.toggle('dark-theme'); localStorage.setItem('sioTheme', document.body.classList.contains('dark-theme') ? 'dark' : 'light'); });
+    const themeToggle = document.getElementById('themeToggle');
+    const themeToggleMobile = document.getElementById('themeToggleMobile');
+    if (themeToggle) themeToggle.addEventListener('click', () => { document.body.classList.toggle('dark-theme'); localStorage.setItem('sioTheme', document.body.classList.contains('dark-theme') ? 'dark' : 'light'); });
+    if (themeToggleMobile) themeToggleMobile.addEventListener('click', () => { document.body.classList.toggle('dark-theme'); localStorage.setItem('sioTheme', document.body.classList.contains('dark-theme') ? 'dark' : 'light'); document.getElementById('mobileNav')?.classList.remove('active'); });
 }
 
 function initBurgerMenu() {
     const burger = document.getElementById('burgerMenu');
     const mobileNav = document.getElementById('mobileNav');
-    const sidebar = document.querySelector('.sidebar');
     if (burger && mobileNav) {
-        burger.addEventListener('click', () => {
-            burger.classList.toggle('active');
-            if (window.innerWidth <= 768) {
-                mobileNav.classList.toggle('active');
-            } else {
-                sidebar.classList.toggle('open');
-            }
-        });
+        burger.addEventListener('click', () => { burger.classList.toggle('active'); mobileNav.classList.toggle('active'); });
         document.querySelectorAll('.mobile-nav a, .mobile-nav button').forEach(link => {
-            link.addEventListener('click', () => {
-                burger.classList.remove('active');
-                mobileNav.classList.remove('active');
-            });
+            link.addEventListener('click', () => { burger.classList.remove('active'); mobileNav.classList.remove('active'); });
         });
     }
 }
@@ -335,7 +310,6 @@ function initParticles() {
     window.addEventListener('resize', () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; });
 }
 
-document.getElementById('sendBtn').dataset.mode = 'mock';
 initEventListeners();
 initTheme();
 initBurgerMenu();
