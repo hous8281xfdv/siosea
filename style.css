@@ -21,7 +21,6 @@ body {
     backdrop-filter: blur(2px);
 }
 
-/* Particles */
 .particles {
     position: fixed;
     top: 0;
@@ -32,7 +31,6 @@ body {
     pointer-events: none;
 }
 
-/* Sidebar */
 .sidebar {
     width: 300px;
     background: rgba(255,255,255,0.9);
@@ -207,7 +205,6 @@ body {
     100% { opacity: 1; transform: scale(1); }
 }
 
-/* Chat Area */
 .chat-area {
     flex: 1;
     display: flex;
@@ -408,7 +405,6 @@ textarea {
     color: #aaa;
 }
 
-/* Modal */
 .modal {
     display: none;
     position: fixed;
@@ -479,7 +475,6 @@ textarea {
     color: #999;
 }
 
-/* Burger menu */
 .burger-menu {
     display: none;
     position: fixed;
@@ -536,14 +531,12 @@ textarea {
 }
 
 @media (max-width: 768px) {
-    .sidebar { position: fixed; left: -300px; top: 0; height: 100vh; z-index: 999; transition: 0.3s; }
-    .sidebar.open { left: 0; }
+    .sidebar { display: none; }
     .burger-menu { display: flex; }
     .chat-area { width: 100%; }
     .message { max-width: 95%; }
 }
 
-/* Dark theme */
 body.dark-theme {
     background: linear-gradient(135deg, #1a1a2e, #16213e);
     color: #eee;
