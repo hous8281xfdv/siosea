@@ -1,38 +1,78 @@
-const GEMINI_API_KEY = 'AQ.Ab8RN6JkXIqMYtl4sjW4GxtA6dtJpy7lr6WCv5gHA-_O7ZFfMQ';
-const API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
-
 const STORAGE_KEY = 'sio_chats';
 let currentChatId = null;
 let chats = [];
 
+const API_URL = 'https://api.airforce/v1/chat/completions';
+const API_KEY = 'sk-air-LXJqniOm9H8UAq3A51ZZodBYU5Om3vhcd3RnrXY6U7gCrteT';
+
 async function getAIResponse(userMessage) {
     try {
-        const response = await fetch(`${API_URL}?key=${GEMINI_API_KEY}`, {
+        const response = await fetch(API_URL, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+                'Authorization': `Bearer ${API_KEY}`,
+                'Content-Type': 'application/json'
+            },
             body: JSON.stringify({
-                contents: [{ parts: [{ text: userMessage }] }]
+                model: 'deepseek-v3',
+                messages: [{ role: 'user', content: userMessage }],
+                max_tokens: 500,
+                temperature: 0.8
             })
         });
+
         const data = await response.json();
-        if (data.candidates && data.candidates[0] && data.candidates[0].content) {
-            return data.candidates[0].content.parts[0].text;
+
+        if (data.choices && data.choices[0] && data.choices[0].message) {
+            return data.choices[0].message.content;
+        } else if (data.error) {
+            console.error('API Error:', data.error);
+            return getSmartFallback(userMessage);
         } else {
-            return getFallbackResponse(userMessage);
+            return getSmartFallback(userMessage);
         }
     } catch (error) {
-        console.error('Ошибка API:', error);
-        return getFallbackResponse(userMessage);
+        console.error('Connection error:', error);
+        return getSmartFallback(userMessage);
     }
 }
 
-function getFallbackResponse(userMessage) {
+function getSmartFallback(userMessage) {
     const msg = userMessage.toLowerCase();
-    if (msg.includes('привет')) return 'Привет! Я Sio. Чем могу помочь?';
-    if (msg.includes('олицетворение')) return 'Олицетворение — это литературный приём, когда неодушевлённому предмету приписываются свойства живого. Например: "ветер воет", "солнце смеётся".';
-    if (msg.includes('стих')) return 'Вот стих:\n\nЗа окном шумит листва,\nОсень тихою стопой\nКрасит желтым города,\nУкрывая нас с тобой.';
-    if (msg.includes('спасибо')) return 'Пожалуйста! Обращайся ещё.';
-    return `🌱 Я Sio. Отвечаю: "${userMessage.substring(0, 100)}"\n\nЗадай более конкретный вопрос, и я постараюсь помочь.`;
+    
+    if (msg.includes('привет') || msg.includes('здравствуй')) {
+        return 'Привет! Я Sio — искусственный интеллект. Чем могу помочь?';
+    }
+    if (msg.includes('как дела')) {
+        return 'У меня всё отлично! А у тебя?';
+    }
+    if (msg.includes('спасибо')) {
+        return 'Пожалуйста! Обращайся ещё.';
+    }
+    if (msg.includes('олицетворение')) {
+        return 'Олицетворение — это литературный приём, когда неодушевлённому предмету приписываются свойства живого. Например: "ветер воет", "солнце улыбается".';
+    }
+    if (msg.includes('стих')) {
+        return 'Вот небольшой стих:\n\nЗа окном шумит листва,\nОсень тихою стопой\nКрасит желтым города,\nУкрывая нас с тобой.';
+    }
+    if (msg.includes('сколько будет') || msg.includes('посчитай') || msg.includes('вычисли')) {
+        const numbers = userMessage.match(/\d+/g);
+        if (numbers && numbers.length >= 2) {
+            const result = numbers.reduce((a, b) => Number(a) + Number(b), 0);
+            return `${userMessage} = ${result}`;
+        }
+    }
+    if (msg.includes('кто тебя создал')) {
+        return 'Меня создал разработчик Sio, чтобы помогать людям с вопросами и задачами.';
+    }
+    if (msg.includes('что ты умеешь')) {
+        return 'Я умею отвечать на вопросы, помогать с учебой, считать, писать стихи, объяснять сложные вещи и просто болтать. Спрашивай что угодно!';
+    }
+    if (msg.includes('расскажи шутку')) {
+        return 'Шутка: Встречаются два программиста. Один говорит: "У меня проблема". Второй: "Давай я её залогирую и потом решим".';
+    }
+    
+    return `🤖 Sio AI:\n\n${userMessage}\n\nЗадай более конкретный вопрос, и я постараюсь помочь. Я могу считать, объяснять, шутить и отвечать на любые темы.`;
 }
 
 function loadChats() {
@@ -54,7 +94,7 @@ function createNewChat() {
     const newChat = {
         id: Date.now(),
         title: 'Новый чат',
-        messages: [{ role: 'ai', text: 'Привет! Я Sio — искусственный интеллект. Задай мне любой вопрос.', time: new Date().toLocaleTimeString() }],
+        messages: [{ role: 'ai', text: 'Привет! Я Sio — искусственный интеллект на основе DeepSeek-V3. Задай мне любой вопрос, и я постараюсь ответить как можно точнее. Чем могу помочь?', time: new Date().toLocaleTimeString() }],
         createdAt: new Date().toISOString()
     };
     chats.unshift(newChat);
@@ -76,7 +116,7 @@ function renderMessages(messages) {
     const container = document.getElementById('chatMessages');
     if (!container) return;
     if (!messages || messages.length === 0) {
-        container.innerHTML = '<div class="message ai-message"><div class="message-avatar"><i class="fas fa-robot"></i></div><div class="message-content"><div class="message-text">Напишите что-нибудь</div><div class="message-time">Сейчас</div></div></div>';
+        container.innerHTML = '<div class="message ai-message"><div class="message-avatar"><i class="fas fa-robot"></i></div><div class="message-content"><div class="message-text">Напишите что-нибудь, чтобы начать диалог</div><div class="message-time">Сейчас</div></div></div>';
         return;
     }
     container.innerHTML = messages.map(msg => `
@@ -99,7 +139,7 @@ function scrollToBottom() {
 function renderHistory() {
     const container = document.getElementById('historyList');
     if (!container) return;
-    if (chats.length === 0) { container.innerHTML = '<div style="padding:20px;text-align:center;color:#999;">Нет диалогов</div>'; return; }
+    if (chats.length === 0) { container.innerHTML = '<div style="padding:20px; text-align:center; color:#999;">Нет диалогов</div>'; return; }
     container.innerHTML = chats.map(chat => `
         <div class="history-item ${chat.id == currentChatId ? 'active' : ''}" data-id="${chat.id}">
             <span class="history-item-title">${escapeHtml(chat.title)}</span>
@@ -198,7 +238,7 @@ async function sendMessage() {
 function clearCurrentChat() {
     const chat = chats.find(c => c.id == currentChatId);
     if (chat) {
-        chat.messages = [{ role: 'ai', text: 'Привет! Я Sio — искусственный интеллект. Задай мне любой вопрос.', time: new Date().toLocaleTimeString() }];
+        chat.messages = [{ role: 'ai', text: 'Привет! Я Sio — искусственный интеллект на основе DeepSeek-V3. Задай мне любой вопрос, и я постараюсь ответить как можно точнее. Чем могу помочь?', time: new Date().toLocaleTimeString() }];
         saveChats();
         loadChat(currentChatId);
         showToast('Чат очищен');
