@@ -3,7 +3,7 @@ let currentChatId = null;
 let chats = [];
 
 const API_URL = 'https://openrouter.ai/api/v1/chat/completions';
-const API_KEY = 'sk-or-v1-9a8e0b2c4d6f8a0b2c4d6e8f0a2b4c6d8e0f2a4b6c8d0e2f4a6b8c0d2e4f6a8b0c'; // demo ключ, замени на свой
+const API_KEY = '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';
 
 async function getAIResponse(userMessage) {
     try {
@@ -14,20 +14,22 @@ async function getAIResponse(userMessage) {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                model: 'deepseek/deepseek-r1:free',
+                model: 'mistralai/mistral-7b-instruct',
                 messages: [{ role: 'user', content: userMessage }],
-                max_tokens: 1000,
-                temperature: 0.8
+                max_tokens: 500,
+                temperature: 0.7
             })
         });
+        
         const data = await response.json();
+        
         if (data.choices && data.choices[0] && data.choices[0].message) {
             return data.choices[0].message.content;
         } else if (data.error) {
             console.error('API Error:', data.error);
             return `❌ Ошибка API: ${data.error.message || 'Неизвестная ошибка'}`;
         } else {
-            return '❌ Не удалось получить ответ от сервера. Попробуйте позже.';
+            return '❌ Не удалось получить ответ. Попробуйте позже.';
         }
     } catch (error) {
         console.error('Connection error:', error);
@@ -54,7 +56,7 @@ function createNewChat() {
     const newChat = {
         id: Date.now(),
         title: 'Новый чат',
-        messages: [{ role: 'ai', text: 'Привет! Я Sio — искусственный интеллект на основе DeepSeek. Задай мне любой вопрос, и я постараюсь ответить как можно точнее. Чем могу помочь?', time: new Date().toLocaleTimeString() }],
+        messages: [{ role: 'ai', text: 'Привет! Я Sio — искусственный интеллект. Задай мне любой вопрос, и я постараюсь ответить как можно точнее. Чем могу помочь?', time: new Date().toLocaleTimeString() }],
         createdAt: new Date().toISOString()
     };
     chats.unshift(newChat);
@@ -205,7 +207,7 @@ async function sendMessage() {
 function clearCurrentChat() {
     const chat = chats.find(c => c.id == currentChatId);
     if (chat) {
-        chat.messages = [{ role: 'ai', text: 'Привет! Я Sio — искусственный интеллект на основе DeepSeek. Задай мне любой вопрос, и я постараюсь ответить как можно точнее. Чем могу помочь?', time: new Date().toLocaleTimeString() }];
+        chat.messages = [{ role: 'ai', text: 'Привет! Я Sio — искусственный интеллект. Задай мне любой вопрос, и я постараюсь ответить как можно точнее. Чем могу помочь?', time: new Date().toLocaleTimeString() }];
         saveChats();
         loadChat(currentChatId);
         showToast('Чат очищен');
