@@ -20,32 +20,21 @@ async function getAIResponse(userMessage) {
                 temperature: 0.8
             })
         });
+
         const data = await response.json();
+
         if (data.choices && data.choices[0] && data.choices[0].message) {
             return data.choices[0].message.content;
+        } else if (data.error) {
+            console.error('API Error:', data.error);
+            return `❌ Ошибка API: ${data.error.message || 'Неизвестная ошибка'}`;
+        } else {
+            return '❌ Не удалось получить ответ от сервера. Попробуйте позже.';
         }
-        return smartFallback(userMessage);
     } catch (error) {
-        console.error('API error:', error);
-        return smartFallback(userMessage);
+        console.error('Connection error:', error);
+        return '❌ Ошибка соединения с API. Проверьте интернет.';
     }
-}
-
-function smartFallback(userMessage) {
-    const msg = userMessage.toLowerCase();
-    if (msg.includes('привет')) return 'Привет! Я Sio. Чем могу помочь?';
-    if (msg.includes('как дела')) return 'У меня всё отлично! А у тебя?';
-    if (msg.includes('спасибо')) return 'Пожалуйста! Обращайся ещё.';
-    if (msg.includes('олицетворение')) return 'Олицетворение — литературный приём, когда неодушевлённому предмету приписываются свойства живого. Пример: "ветер воет", "солнце смеётся".';
-    if (msg.includes('стих')) return 'Вот стих:\n\nЗа окном шумит листва,\nОсень тихою стопой\nКрасит желтым города,\nУкрывая нас с тобой.';
-    if (msg.includes('сколько будет') || msg.includes('посчитай')) {
-        const nums = userMessage.match(/\d+/g);
-        if (nums && nums.length >= 2) {
-            const result = nums.reduce((a, b) => Number(a) + Number(b), 0);
-            return `${userMessage} = ${result}`;
-        }
-    }
-    return `🤖 Sio AI отвечает: "${userMessage.substring(0, 100)}"\n\nЗадайте более конкретный вопрос, и я постараюсь помочь.`;
 }
 
 function loadChats() {
@@ -171,21 +160,21 @@ function updateChatTitle(chatId) {
     }
 }
 
-function addMessage(chatId, role, text, isTyping = false) {
+function addMessage(chatId, role, text) {
     const chat = chats.find(c => c.id == chatId);
     if (chat) {
-        if (!isTyping) {
-            chat.messages.push({ role, text, time: new Date().toLocaleTimeString() });
-            saveChats();
-            if (role === 'user') updateChatTitle(chatId);
-        }
+        chat.messages.push({ role, text, time: new Date().toLocaleTimeString() });
+        saveChats();
+        if (role === 'user') updateChatTitle(chatId);
         loadChat(chatId);
     }
 }
 
 function showTypingIndicator() {
     const container = document.getElementById('chatMessages');
-    const indicator = document.createElement('div');
+    let indicator = document.getElementById('typingIndicator');
+    if (indicator) indicator.remove();
+    indicator = document.createElement('div');
     indicator.className = 'message ai-message typing-message';
     indicator.id = 'typingIndicator';
     indicator.innerHTML = `
