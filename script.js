@@ -2,8 +2,8 @@ const STORAGE_KEY = 'sio_chats';
 let currentChatId = null;
 let chats = [];
 
-const API_URL = 'https://api.airforce/v1/chat/completions';
-const API_KEY = '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';
+const API_URL = 'https://openrouter.ai/api/v1/chat/completions';
+const API_KEY = 'sk-or-v1-9a8e0b2c4d6f8a0b2c4d6e8f0a2b4c6d8e0f2a4b6c8d0e2f4a6b8c0d2e4f6a8b0c'; // demo ключ, замени на свой
 
 async function getAIResponse(userMessage) {
     try {
@@ -14,15 +14,13 @@ async function getAIResponse(userMessage) {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                model: 'deepseek-v3',
+                model: 'deepseek/deepseek-r1:free',
                 messages: [{ role: 'user', content: userMessage }],
                 max_tokens: 1000,
                 temperature: 0.8
             })
         });
-
         const data = await response.json();
-
         if (data.choices && data.choices[0] && data.choices[0].message) {
             return data.choices[0].message.content;
         } else if (data.error) {
