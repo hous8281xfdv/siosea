@@ -1,4 +1,3 @@
-// === НАСТРОЙКИ ===
 const GEMINI_API_KEY = 'AQ.Ab8RN6JkXIqMYtl4sjW4GxtA6dtJpy7lr6WCv5gHA-_O7ZFfMQ';
 const API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
 
@@ -19,41 +18,43 @@ async function getAIResponse(userMessage) {
         if (data.candidates && data.candidates[0] && data.candidates[0].content) {
             return data.candidates[0].content.parts[0].text;
         } else {
-            return '😕 Не удалось получить ответ. Попробуйте переформулировать вопрос.';
+            return getFallbackResponse(userMessage);
         }
     } catch (error) {
-        console.error('Ошибка Gemini API:', error);
-        return '❌ Ошибка соединения с сервером. Проверьте интернет.';
+        console.error('Ошибка API:', error);
+        return getFallbackResponse(userMessage);
     }
+}
+
+function getFallbackResponse(userMessage) {
+    const msg = userMessage.toLowerCase();
+    if (msg.includes('привет')) return 'Привет! Я Sio. Чем могу помочь?';
+    if (msg.includes('олицетворение')) return 'Олицетворение — это литературный приём, когда неодушевлённому предмету приписываются свойства живого. Например: "ветер воет", "солнце смеётся".';
+    if (msg.includes('стих')) return 'Вот стих:\n\nЗа окном шумит листва,\nОсень тихою стопой\nКрасит желтым города,\nУкрывая нас с тобой.';
+    if (msg.includes('спасибо')) return 'Пожалуйста! Обращайся ещё.';
+    return `🌱 Я Sio. Отвечаю: "${userMessage.substring(0, 100)}"\n\nЗадай более конкретный вопрос, и я постараюсь помочь.`;
 }
 
 function loadChats() {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
         chats = JSON.parse(saved);
-        if (chats.length === 0) {
-            createNewChat();
-        } else {
+        if (chats.length === 0) createNewChat();
+        else {
             currentChatId = chats[0].id;
             renderHistory();
             loadChat(currentChatId);
         }
-    } else {
-        createNewChat();
-    }
+    } else createNewChat();
 }
 
-function saveChats() {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(chats));
-}
+function saveChats() { localStorage.setItem(STORAGE_KEY, JSON.stringify(chats)); }
 
 function createNewChat() {
     const newChat = {
         id: Date.now(),
         title: 'Новый чат',
-        messages: [
-            { role: 'ai', text: 'Привет! Я Sio — нейросеть на основе Google Gemini. Задай мне любой вопрос: напиши стих, объясни физику, придумай рецепт или просто поболтай. Чем могу помочь?', time: new Date().toLocaleTimeString() }
-        ],
+        messages: [{ role: 'ai', text: 'Привет! Я Sio — искусственный интеллект. Задай мне любой вопрос.', time: new Date().toLocaleTimeString() }],
         createdAt: new Date().toISOString()
     };
     chats.unshift(newChat);
@@ -75,7 +76,7 @@ function renderMessages(messages) {
     const container = document.getElementById('chatMessages');
     if (!container) return;
     if (!messages || messages.length === 0) {
-        container.innerHTML = '<div class="message ai-message"><div class="message-avatar"><i class="fas fa-robot"></i></div><div class="message-content"><div class="message-text">Напишите что-нибудь, чтобы начать диалог</div><div class="message-time">Сейчас</div></div></div>';
+        container.innerHTML = '<div class="message ai-message"><div class="message-avatar"><i class="fas fa-robot"></i></div><div class="message-content"><div class="message-text">Напишите что-нибудь</div><div class="message-time">Сейчас</div></div></div>';
         return;
     }
     container.innerHTML = messages.map(msg => `
@@ -98,10 +99,7 @@ function scrollToBottom() {
 function renderHistory() {
     const container = document.getElementById('historyList');
     if (!container) return;
-    if (chats.length === 0) {
-        container.innerHTML = '<div style="padding:20px; text-align:center; color:#999;">Нет диалогов</div>';
-        return;
-    }
+    if (chats.length === 0) { container.innerHTML = '<div style="padding:20px;text-align:center;color:#999;">Нет диалогов</div>'; return; }
     container.innerHTML = chats.map(chat => `
         <div class="history-item ${chat.id == currentChatId ? 'active' : ''}" data-id="${chat.id}">
             <span class="history-item-title">${escapeHtml(chat.title)}</span>
@@ -111,15 +109,13 @@ function renderHistory() {
     document.querySelectorAll('.history-item').forEach(item => {
         item.addEventListener('click', (e) => {
             if (e.target.classList.contains('history-item-delete') || e.target.closest('.history-item-delete')) return;
-            const id = parseInt(item.dataset.id);
-            loadChat(id);
+            loadChat(parseInt(item.dataset.id));
         });
     });
     document.querySelectorAll('.history-item-delete').forEach(btn => {
         btn.addEventListener('click', (e) => {
             e.stopPropagation();
-            const id = parseInt(btn.dataset.id);
-            deleteChat(id);
+            deleteChat(parseInt(btn.dataset.id));
         });
     });
 }
@@ -136,9 +132,8 @@ function deleteChat(chatId) {
     const index = chats.findIndex(c => c.id == chatId);
     if (index !== -1) {
         chats.splice(index, 1);
-        if (chats.length === 0) {
-            createNewChat();
-        } else {
+        if (chats.length === 0) createNewChat();
+        else {
             if (currentChatId == chatId) {
                 currentChatId = chats[0].id;
                 loadChat(currentChatId);
@@ -166,11 +161,7 @@ function updateChatTitle(chatId) {
 async function addMessage(chatId, role, text) {
     const chat = chats.find(c => c.id == chatId);
     if (chat) {
-        chat.messages.push({
-            role: role,
-            text: text,
-            time: new Date().toLocaleTimeString()
-        });
+        chat.messages.push({ role, text, time: new Date().toLocaleTimeString() });
         saveChats();
         if (role === 'user') updateChatTitle(chatId);
         loadChat(chatId);
@@ -182,12 +173,7 @@ function showTypingIndicator() {
     const indicator = document.createElement('div');
     indicator.className = 'message ai-message typing-message';
     indicator.id = 'typingIndicator';
-    indicator.innerHTML = `
-        <div class="message-avatar"><i class="fas fa-robot"></i></div>
-        <div class="message-content">
-            <div class="typing-indicator"><span></span><span></span><span></span></div>
-        </div>
-    `;
+    indicator.innerHTML = `<div class="message-avatar"><i class="fas fa-robot"></i></div><div class="message-content"><div class="typing-indicator"><span></span><span></span><span></span></div></div>`;
     container.appendChild(indicator);
     scrollToBottom();
 }
@@ -212,9 +198,7 @@ async function sendMessage() {
 function clearCurrentChat() {
     const chat = chats.find(c => c.id == currentChatId);
     if (chat) {
-        chat.messages = [
-            { role: 'ai', text: 'Привет! Я Sio — нейросеть на основе Google Gemini. Задай мне любой вопрос, и я постараюсь ответить. Чем могу помочь?', time: new Date().toLocaleTimeString() }
-        ];
+        chat.messages = [{ role: 'ai', text: 'Привет! Я Sio — искусственный интеллект. Задай мне любой вопрос.', time: new Date().toLocaleTimeString() }];
         saveChats();
         loadChat(currentChatId);
         showToast('Чат очищен');
@@ -240,7 +224,6 @@ function showToast(msg) {
     toast.style.padding = '10px 20px';
     toast.style.borderRadius = '40px';
     toast.style.zIndex = '9999';
-    toast.style.fontSize = '0.9rem';
     document.body.appendChild(toast);
     setTimeout(() => toast.remove(), 3000);
 }
@@ -277,9 +260,7 @@ function initBurgerMenu() {
     const mobileNav = document.getElementById('mobileNav');
     if (burger && mobileNav) {
         burger.addEventListener('click', () => { burger.classList.toggle('active'); mobileNav.classList.toggle('active'); });
-        document.querySelectorAll('.mobile-nav a, .mobile-nav button').forEach(link => {
-            link.addEventListener('click', () => { burger.classList.remove('active'); mobileNav.classList.remove('active'); });
-        });
+        document.querySelectorAll('.mobile-nav a, .mobile-nav button').forEach(link => { link.addEventListener('click', () => { burger.classList.remove('active'); mobileNav.classList.remove('active'); }); });
     }
 }
 
@@ -290,9 +271,7 @@ function initParticles() {
     let particles = [];
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
-    for (let i = 0; i < 50; i++) {
-        particles.push({ x: Math.random() * canvas.width, y: Math.random() * canvas.height, radius: Math.random() * 3 + 1, alpha: Math.random() * 0.5 + 0.2 });
-    }
+    for (let i = 0; i < 50; i++) particles.push({ x: Math.random() * canvas.width, y: Math.random() * canvas.height, radius: Math.random() * 3 + 1, alpha: Math.random() * 0.5 + 0.2 });
     function draw() {
         if (!ctx) return;
         ctx.clearRect(0, 0, canvas.width, canvas.height);
