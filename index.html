@@ -56,7 +56,7 @@
             <div class="chat-header">
                 <div class="chat-header-info">
                     <h2>Sio AI Assistant</h2>
-                    <p>Готова ответить на ваши вопросы</p>
+                    <p>Gemini AI — отвечает на любые вопросы</p>
                 </div>
                 <div class="chat-header-actions">
                     <button id="clearChatBtn" class="icon-btn"><i class="fas fa-eraser"></i></button>
@@ -66,7 +66,7 @@
                 <div class="message ai-message">
                     <div class="message-avatar"><i class="fas fa-robot"></i></div>
                     <div class="message-content">
-                        <div class="message-text">Привет! Я Sio — нейросеть-помощник. Задай мне любой вопрос, и я постараюсь ответить. Чем могу помочь?</div>
+                        <div class="message-text">Привет! Я Sio — нейросеть на основе Google Gemini. Задай мне любой вопрос: напиши стих, объясни физику, придумай рецепт или просто поболтай. Чем могу помочь?</div>
                         <div class="message-time">Сейчас</div>
                     </div>
                 </div>
@@ -79,18 +79,17 @@
                     </button>
                 </div>
                 <div class="input-footer">
-                    <span>Sio Search — нейросеть на основе AI</span>
+                    <span>Sio Search — работает на Google Gemini AI</span>
                 </div>
             </div>
         </main>
     </div>
 
-    <!-- Модалка очистки -->
     <div id="confirmModal" class="modal">
         <div class="modal-content">
             <span class="close-modal">&times;</span>
             <h3><i class="fas fa-exclamation-triangle"></i> Подтверждение</h3>
-            <p>Вы уверены, что хотите очистить всю историю диалогов? Это действие нельзя отменить.</p>
+            <p>Вы уверены, что хотите очистить всю историю диалогов?</p>
             <div class="modal-buttons">
                 <button id="confirmClearBtn" class="btn-danger">Да, очистить</button>
                 <button id="cancelModalBtn" class="btn-secondary">Отмена</button>
