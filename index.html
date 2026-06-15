@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Sio Search — нейросеть с чатом</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+
+    <div class="particles" id="particles"></div>
+
+    <div class="burger-menu" id="burgerMenu">
+        <div class="burger-line line1"></div>
+        <div class="burger-line line2"></div>
+        <div class="burger-line line3"></div>
+    </div>
+    <nav class="mobile-nav" id="mobileNav">
+        <ul>
+            <li><a href="#" id="mobileNewChat"><i class="fas fa-plus-circle"></i> Новый чат</a></li>
+            <li><a href="#" id="mobileClearHistory"><i class="fas fa-trash-alt"></i> Очистить историю</a></li>
+            <li><button id="themeToggleMobile"><i class="fas fa-moon"></i> Тёмная тема</button></li>
+        </ul>
+    </nav>
+
+    <div class="container">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <div class="logo-icon">
+                        <i class="fas fa-brain"></i>
+                    </div>
+                    <div class="logo-text">
+                        <h1>Sio Search</h1>
+                        <p>нейросеть с чатом</p>
+                    </div>
+                </div>
+                <button class="new-chat-btn" id="newChatBtn"><i class="fas fa-plus"></i> Новый чат</button>
+            </div>
+            <div class="history-header">
+                <span>История диалогов</span>
+                <button id="clearHistoryBtn" class="clear-history-icon"><i class="fas fa-trash-alt"></i></button>
+            </div>
+            <div class="history-list" id="historyList"></div>
+            <div class="sidebar-footer">
+                <div class="ai-status">
+                    <div class="status-dot"></div>
+                    <span>Sio AI активна</span>
+                </div>
+            </div>
+        </aside>
+
+        <main class="chat-area">
+            <div class="chat-header">
+                <div class="chat-header-info">
+                    <h2>Sio AI Assistant</h2>
+                    <p>Готова ответить на ваши вопросы</p>
+                </div>
+                <div class="chat-header-actions">
+                    <button id="clearChatBtn" class="icon-btn"><i class="fas fa-eraser"></i></button>
+                </div>
+            </div>
+            <div class="chat-messages" id="chatMessages">
+                <div class="message ai-message">
+                    <div class="message-avatar"><i class="fas fa-robot"></i></div>
+                    <div class="message-content">
+                        <div class="message-text">Привет! Я Sio — нейросеть-помощник. Задай мне любой вопрос, и я постараюсь ответить. Чем могу помочь?</div>
+                        <div class="message-time">Сейчас</div>
+                    </div>
+                </div>
+            </div>
+            <div class="chat-input-area">
+                <div class="input-wrapper">
+                    <textarea id="userInput" placeholder="Задайте вопрос Sio..." rows="1"></textarea>
+                    <button id="sendBtn" class="send-btn">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+                <div class="input-footer">
+                    <span>Sio Search — нейросеть на основе AI</span>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Модалка очистки -->
+    <div id="confirmModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h3><i class="fas fa-exclamation-triangle"></i> Подтверждение</h3>
+            <p>Вы уверены, что хотите очистить всю историю диалогов? Это действие нельзя отменить.</p>
+            <div class="modal-buttons">
+                <button id="confirmClearBtn" class="btn-danger">Да, очистить</button>
+                <button id="cancelModalBtn" class="btn-secondary">Отмена</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
